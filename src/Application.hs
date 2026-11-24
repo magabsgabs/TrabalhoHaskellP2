@@ -45,6 +45,7 @@ import Handler.Home
 import Handler.Categoria
 import Handler.Produto
 import Handler.Status
+import Handler.Cliente
 import Network.Wai (Middleware, requestMethod, responseLBS, mapResponseHeaders)
 import Network.HTTP.Types (ResponseHeaders)
 import Handler.Comment

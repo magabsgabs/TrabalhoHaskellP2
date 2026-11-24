@@ -20,3 +20,5 @@
 /produtos/#ProdutoId      ProdutoR      GET PUT DELETE
 
 /status                   StatusR       GET
+/clientes                 ClientesR     GET POST
+/clientes/#ClienteId      ClienteR      GET PUT DELETE
