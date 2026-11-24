@@ -22,3 +22,4 @@
 /status                   StatusR       GET
 /clientes                 ClientesR     GET POST
 /clientes/#ClienteId      ClienteR      GET PUT DELETE
+/viacep/#Text             ViaCepR       GET
