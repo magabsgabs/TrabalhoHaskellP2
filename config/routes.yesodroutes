@@ -12,3 +12,9 @@
 /comments CommentR POST
 
 /profile ProfileR GET
+
+/categorias               CategoriasR   GET POST
+/categorias/#CategoriaId  CategoriaR    GET PUT DELETE
+
+/produtos                 ProdutosR     GET POST
+/produtos/#ProdutoId      ProdutoR      GET PUT DELETE
