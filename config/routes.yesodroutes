@@ -23,3 +23,5 @@
 /clientes                 ClientesR     GET POST
 /clientes/#ClienteId      ClienteR      GET PUT DELETE
 /viacep/#Text             ViaCepR       GET
+/enderecos                EnderecosR    GET POST
+/enderecos/#EnderecoId    EnderecoR     GET PUT DELETE
