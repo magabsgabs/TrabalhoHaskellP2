@@ -44,6 +44,9 @@ import Handler.Common
 import Handler.Home
 import Handler.Categoria
 import Handler.Produto
+import Handler.Status
+import Network.Wai (Middleware, requestMethod, responseLBS, mapResponseHeaders)
+import Network.HTTP.Types (ResponseHeaders)
 import Handler.Comment
 import Handler.Profile
 
@@ -96,7 +99,21 @@ makeApplication foundation = do
     logWare <- makeLogWare foundation
     -- Create the WAI application and apply middlewares
     appPlain <- toWaiAppPlain foundation
-    return $ logWare $ defaultMiddlewaresNoLogging appPlain
+    return $ logWare $ corsMiddleware $ defaultMiddlewaresNoLogging appPlain
+
+-- Middleware para liberar requisições de frontends externos (CORS)
+corsMiddleware :: Middleware
+corsMiddleware app req respond =
+    if requestMethod req == "OPTIONS"
+        then respond $ responseLBS status200 corsHeaders ""
+        else app req $ \res -> respond $ mapResponseHeaders (corsHeaders ++) res
+  where
+    corsHeaders :: ResponseHeaders
+    corsHeaders =
+        [ ("Access-Control-Allow-Origin", "*")
+        , ("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        , ("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+        ]
 
 makeLogWare :: App -> IO Middleware
 makeLogWare foundation =

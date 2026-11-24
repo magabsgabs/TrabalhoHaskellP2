@@ -174,6 +174,20 @@ instance Yesod App where
     -- delegate to that function
     isAuthorized ProfileR _ = isAuthenticated
     isAuthorized _ _ = return Authorized
+-- Retorna respostas de erro padronizadas em JSON para a API REST
+    errorHandler NotFound =
+        sendStatusJSON status404 (object ["erro" .= ("Rota ou recurso não encontrado." :: Text)])
+    errorHandler (InvalidArgs msgs) =
+        sendStatusJSON status400 (object ["erro" .= ("Dados de entrada inválidos." :: Text), "detalhes" .= msgs])
+    errorHandler (BadMethod _) =
+        sendStatusJSON status405 (object ["erro" .= ("Método HTTP não permitido para esta rota." :: Text)])
+    errorHandler (PermissionDenied msg) =
+        sendStatusJSON status403 (object ["erro" .= ("Acesso negado." :: Text), "detalhe" .= msg])
+    errorHandler NotAuthenticated =
+        sendStatusJSON status401 (object ["erro" .= ("Não autenticado." :: Text)])
+    errorHandler (InternalError msg) =
+        sendStatusJSON status500 (object ["erro" .= ("Erro interno no servidor." :: Text), "detalhe" .= msg])
+
 
     -- This function creates static content files in the static folder
     -- and names them based on a hash of their content. This allows

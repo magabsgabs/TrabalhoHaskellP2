@@ -18,3 +18,5 @@
 
 /produtos                 ProdutosR     GET POST
 /produtos/#ProdutoId      ProdutoR      GET PUT DELETE
+
+/status                   StatusR       GET
