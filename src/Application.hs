@@ -48,6 +48,7 @@ import Handler.Status
 import Handler.Cliente
 import Handler.ViaCEP
 import Handler.Endereco
+import Handler.Fornecedor
 import Network.Wai (Middleware, requestMethod, responseLBS, mapResponseHeaders)
 import Network.HTTP.Types (ResponseHeaders)
 import Handler.Comment
