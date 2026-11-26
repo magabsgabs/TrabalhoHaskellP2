@@ -32,3 +32,6 @@
 
 /pedidos                        PedidosR        GET POST
 /pedidos/#PedidoId              PedidoR         GET PUT DELETE
+
+/itens-pedido                   ItensPedidoR    GET POST
+/itens-pedido/#ItemPedidoId     ItemPedidoR     GET PUT DELETE
