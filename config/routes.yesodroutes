@@ -35,3 +35,7 @@
 
 /itens-pedido                   ItensPedidoR    GET POST
 /itens-pedido/#ItemPedidoId     ItemPedidoR     GET PUT DELETE
+/clientes/#ClienteId/pedidos       ClientePedidosR     GET
+/clientes/#ClienteId/enderecos     ClienteEnderecosR   GET
+/categorias/#CategoriaId/produtos  CategoriaProdutosR  GET
+/pedidos/#PedidoId/itens           PedidoItensR        GET

@@ -51,6 +51,7 @@ import Handler.Endereco
 import Handler.Fornecedor
 import Handler.Pedido
 import Handler.ItemPedido
+import Handler.Filtro
 import Network.Wai (Middleware, requestMethod, responseLBS, mapResponseHeaders)
 import Network.HTTP.Types (ResponseHeaders)
 import Handler.Comment
