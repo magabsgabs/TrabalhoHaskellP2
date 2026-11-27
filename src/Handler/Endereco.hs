@@ -3,7 +3,7 @@ module Handler.Endereco where
 
 import Import
 import qualified Data.Text as T
-import Handler.ViaCEP (EnderecoCep (..), consultaCep)
+import Handler.ViaCEP (ViaCepResp (..), consultaCep)
 
 -- payload que o cliente manda, viacep preenche o resto
 data NovoEndereco = NovoEndereco
@@ -28,7 +28,7 @@ validaNovo n
     | otherwise = Nothing
 
 -- cola os dados do viacep com o numero/complemento do payload, sai o Endereco certinho
-montaEndereco :: NovoEndereco -> EnderecoCep -> Endereco
+montaEndereco :: NovoEndereco -> ViaCepResp -> Endereco
 montaEndereco n e = Endereco
     { enderecoClienteId   = neClienteId n
     , enderecoCep         = cepCep e

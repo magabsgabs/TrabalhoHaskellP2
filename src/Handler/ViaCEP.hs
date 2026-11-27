@@ -1,7 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric     #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Handler.ViaCEP
-    ( EnderecoCep (..)
+    ( ViaCepResp (..)
     , consultaCep
     , getViaCepR
     ) where
@@ -12,25 +12,25 @@ import qualified Data.Char as C
 import Data.Aeson (FromJSON (..), withObject, (.:?), (.!=))
 import Network.HTTP.Simple (httpLBS, parseRequest, getResponseStatusCode, getResponseBody)
 import qualified Data.Aeson as A
-import Control.Exception (try, SomeException)
 
--- struct do que o viacep devolve, so o que a gente usa
-data EnderecoCep = EnderecoCep
-    { cepCep        :: Text
-    , cepLogradouro :: Text
-    , cepBairro     :: Text
-    , cepCidade     :: Text -- viacep chama de "localidade"
-    , cepUf         :: Text
+-- resposta do viacep, so o que a gente usa
+-- (nome evita conflito com o constructor EnderecoCep do persistent)
+data ViaCepResp = ViaCepResp
+    { cepCep         :: Text
+    , cepLogradouro  :: Text
+    , cepBairro      :: Text
+    , cepCidade      :: Text -- viacep chama de "localidade"
+    , cepUf          :: Text
     , cepComplemento :: Text
     } deriving Show
 
-instance FromJSON EnderecoCep where
-    parseJSON = withObject "EnderecoCep" $ \o -> do
-        -- se vier "erro": true, ja aborta aqui
-        mErro <- o .:? "erro" .!= False
-        if mErro
+instance FromJSON ViaCepResp where
+    parseJSON = withObject "ViaCepResp" $ \o -> do
+        -- se vier "erro": true, ja aborta
+        erro <- o .:? "erro" .!= False
+        if erro
             then fail "CEP nao existe no ViaCEP"
-            else EnderecoCep
+            else ViaCepResp
                 <$> o .:? "cep"         .!= ""
                 <*> o .:? "logradouro"  .!= ""
                 <*> o .:? "bairro"      .!= ""
@@ -38,7 +38,7 @@ instance FromJSON EnderecoCep where
                 <*> o .:? "uf"          .!= ""
                 <*> o .:? "complemento" .!= ""
 
-instance ToJSON EnderecoCep where
+instance ToJSON ViaCepResp where
     toJSON e = object
         [ "cep"         .= cepCep e
         , "logradouro"  .= cepLogradouro e
@@ -52,16 +52,16 @@ instance ToJSON EnderecoCep where
 limpaCep :: Text -> Text
 limpaCep = T.filter C.isDigit
 
--- consulta o viacep e devolve Right EnderecoCep ou Left msg
--- usada tanto pela rota /viacep quanto pelo handler de Endereco no commit 5
-consultaCep :: Text -> Handler (Either Text EnderecoCep)
+-- consulta o viacep e devolve Right ou Left msg
+-- try vem do UnliftIO via Import (nao importar Control.Exception.try)
+consultaCep :: Text -> Handler (Either Text ViaCepResp)
 consultaCep cepBruto = do
     let cep = limpaCep cepBruto
     if T.length cep /= 8
         then return (Left "CEP tem que ter 8 digito, mano.")
         else do
             let url = "https://viacep.com.br/ws/" <> T.unpack cep <> "/json/"
-            tentativa <- liftIO $ try $ do
+            tentativa <- try $ liftIO $ do
                 req  <- parseRequest url
                 resp <- httpLBS req
                 return (getResponseStatusCode resp, getResponseBody resp)
