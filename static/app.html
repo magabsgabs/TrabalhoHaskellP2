@@ -11,12 +11,15 @@
   body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
   .scroll-x::-webkit-scrollbar { height: 6px; }
   .scroll-x::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+  .inp { border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; width: 100%; background: white; }
+  .inp:focus { outline: none; box-shadow: 0 0 0 2px #94a3b8; }
+  .inp:invalid:not(:placeholder-shown) { border-color: #f43f5e; }
+  .inp:valid:not(:placeholder-shown):not(select) { border-color: #10b981; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800">
 <div x-data="app()" x-init="init()" x-cloak>
 
-  <!-- HEADER -->
   <header class="bg-slate-900 text-white shadow-lg">
     <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
       <div>
@@ -33,9 +36,7 @@
     </div>
     <nav class="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto scroll-x">
       <template x-for="t in tabs" :key="t.id">
-        <button @click="tab = t.id"
-                :class="tab === t.id ? 'bg-slate-50 text-slate-900 font-semibold' : 'text-slate-300 hover:bg-slate-800'"
-                class="px-4 py-2.5 rounded-t-lg text-sm whitespace-nowrap transition-colors">
+        <button @click="tab = t.id" :class="tab === t.id ? 'bg-slate-50 text-slate-900 font-semibold' : 'text-slate-300 hover:bg-slate-800'" class="px-4 py-2.5 rounded-t-lg text-sm whitespace-nowrap transition-colors">
           <span x-text="t.label"></span>
           <span x-show="t.count !== undefined" class="ml-1 text-xs opacity-70" x-text="'(' + t.count + ')'"></span>
         </button>
@@ -43,29 +44,22 @@
     </nav>
   </header>
 
-  <!-- TOAST -->
-  <div x-show="toast.show" x-transition
-       :class="toast.err ? 'bg-rose-600' : 'bg-emerald-600'"
-       class="fixed top-6 right-6 z-50 text-white px-5 py-3 rounded-lg shadow-xl max-w-sm">
+  <div x-show="toast.show" x-transition :class="toast.err ? 'bg-rose-600' : 'bg-emerald-600'" class="fixed top-6 right-6 z-50 text-white px-5 py-3 rounded-lg shadow-xl max-w-sm">
     <p class="text-sm font-semibold" x-text="toast.msg"></p>
   </div>
 
-  <!-- MAIN -->
   <main class="max-w-7xl mx-auto px-4 py-8">
 
-    <!-- CLIENTES -->
     <section x-show="tab === 'clientes'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 class="font-black text-lg mb-4">Novo cliente</h2>
-          <div class="space-y-3">
-            <input x-model="formCliente.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
-            <input x-model="formCliente.email" type="email" placeholder="email@exemplo.com" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formCliente.telefone" placeholder="Telefone (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formCliente.cpf" placeholder="CPF (11 digitos)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <button @click="createCliente()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
-          </div>
-        </div>
+        <form @submit.prevent="createCliente()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <h2 class="font-black text-lg mb-2">Novo cliente</h2>
+          <input x-model="formCliente.nome" placeholder="Nome (min 2 letras)" minlength="2" maxlength="80" required class="inp">
+          <input x-model="formCliente.email" type="email" placeholder="email@exemplo.com" required maxlength="120" class="inp">
+          <input x-model="formCliente.telefone" @input="formCliente.telefone = maskPhone($event.target.value)" placeholder="(11) 99999-8888" maxlength="15" class="inp">
+          <input x-model="formCliente.cpf" @input="formCliente.cpf = maskCpf($event.target.value)" placeholder="000.000.000-00" maxlength="14" required class="inp">
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b border-slate-200 flex justify-between items-center">
             <h2 class="font-black text-lg">Clientes</h2>
@@ -73,19 +67,15 @@
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
-              <thead class="bg-slate-50 text-xs uppercase text-slate-500">
-                <tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-left">Email</th><th class="px-4 py-2 text-left">CPF</th><th></th></tr>
-              </thead>
+              <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-left">Email</th><th class="px-4 py-2 text-left">CPF</th><th></th></tr></thead>
               <tbody>
                 <template x-for="c in clientes" :key="c.id">
                   <tr class="border-t border-slate-100 hover:bg-slate-50">
                     <td class="px-4 py-2 text-slate-400" x-text="c.id"></td>
                     <td class="px-4 py-2 font-semibold" x-text="c.nome"></td>
                     <td class="px-4 py-2 text-slate-600" x-text="c.email"></td>
-                    <td class="px-4 py-2 text-slate-600 font-mono text-xs" x-text="c.cpf"></td>
-                    <td class="px-4 py-2 text-right">
-                      <button @click="deleteCliente(c.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button>
-                    </td>
+                    <td class="px-4 py-2 text-slate-600 font-mono text-xs" x-text="fmtCpf(c.cpf)"></td>
+                    <td class="px-4 py-2 text-right"><button @click="deleteCliente(c.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
                   </tr>
                 </template>
                 <tr x-show="clientes.length === 0"><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum cliente cadastrado</td></tr>
@@ -96,22 +86,16 @@
       </div>
     </section>
 
-    <!-- CATEGORIAS -->
     <section x-show="tab === 'categorias'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 class="font-black text-lg mb-4">Nova categoria</h2>
-          <div class="space-y-3">
-            <input x-model="formCategoria.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <textarea x-model="formCategoria.descricao" placeholder="Descricao (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" rows="2"></textarea>
-            <button @click="createCategoria()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
-          </div>
-        </div>
+        <form @submit.prevent="createCategoria()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <h2 class="font-black text-lg mb-2">Nova categoria</h2>
+          <input x-model="formCategoria.nome" placeholder="Nome (min 2)" minlength="2" maxlength="60" required class="inp">
+          <textarea x-model="formCategoria.descricao" placeholder="Descricao (opcional)" maxlength="255" class="inp" rows="2"></textarea>
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div class="p-5 border-b border-slate-200 flex justify-between items-center">
-            <h2 class="font-black text-lg">Categorias</h2>
-            <button @click="loadCategorias()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button>
-          </div>
+          <div class="p-5 border-b border-slate-200 flex justify-between items-center"><h2 class="font-black text-lg">Categorias</h2><button @click="loadCategorias()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
           <table class="w-full text-sm">
             <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-left">Descricao</th><th></th></tr></thead>
             <tbody>
@@ -130,19 +114,16 @@
       </div>
     </section>
 
-    <!-- FORNECEDORES -->
     <section x-show="tab === 'fornecedores'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 class="font-black text-lg mb-4">Novo fornecedor</h2>
-          <div class="space-y-3">
-            <input x-model="formFornecedor.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formFornecedor.cnpj" placeholder="CNPJ (14 digitos)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formFornecedor.email" type="email" placeholder="Email (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formFornecedor.telefone" placeholder="Telefone (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <button @click="createFornecedor()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
-          </div>
-        </div>
+        <form @submit.prevent="createFornecedor()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <h2 class="font-black text-lg mb-2">Novo fornecedor</h2>
+          <input x-model="formFornecedor.nome" placeholder="Nome (min 2)" minlength="2" maxlength="100" required class="inp">
+          <input x-model="formFornecedor.cnpj" @input="formFornecedor.cnpj = maskCnpj($event.target.value)" placeholder="00.000.000/0000-00" maxlength="18" required class="inp">
+          <input x-model="formFornecedor.email" type="email" placeholder="Email (opcional)" maxlength="120" class="inp">
+          <input x-model="formFornecedor.telefone" @input="formFornecedor.telefone = maskPhone($event.target.value)" placeholder="(11) 3333-4444 (opcional)" maxlength="15" class="inp">
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Fornecedores</h2><button @click="loadFornecedores()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
           <table class="w-full text-sm">
@@ -152,7 +133,7 @@
                 <tr class="border-t border-slate-100 hover:bg-slate-50">
                   <td class="px-4 py-2 text-slate-400" x-text="f.id"></td>
                   <td class="px-4 py-2 font-semibold" x-text="f.nome"></td>
-                  <td class="px-4 py-2 font-mono text-xs" x-text="f.cnpj"></td>
+                  <td class="px-4 py-2 font-mono text-xs" x-text="fmtCnpj(f.cnpj)"></td>
                   <td class="px-4 py-2 text-slate-600" x-text="f.email || '-'"></td>
                   <td class="px-4 py-2 text-right"><button @click="deleteFornecedor(f.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
                 </tr>
@@ -164,29 +145,26 @@
       </div>
     </section>
 
-    <!-- PRODUTOS -->
     <section x-show="tab === 'produtos'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 class="font-black text-lg mb-4">Novo produto</h2>
-          <div class="space-y-3">
-            <input x-model="formProduto.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <textarea x-model="formProduto.descricao" placeholder="Descricao (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" rows="2"></textarea>
-            <div class="grid grid-cols-2 gap-2">
-              <input x-model.number="formProduto.preco" type="number" step="0.01" placeholder="Preco" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <input x-model.number="formProduto.estoque" type="number" placeholder="Estoque" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            </div>
-            <select x-model.number="formProduto.categoriaId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Categoria --</option>
-              <template x-for="c in categorias" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
-            </select>
-            <select x-model.number="formProduto.fornecedorId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Fornecedor --</option>
-              <template x-for="f in fornecedores" :key="f.id"><option :value="f.id" x-text="f.nome"></option></template>
-            </select>
-            <button @click="createProduto()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+        <form @submit.prevent="createProduto()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <h2 class="font-black text-lg mb-2">Novo produto</h2>
+          <input x-model="formProduto.nome" placeholder="Nome (min 2)" minlength="2" maxlength="120" required class="inp">
+          <textarea x-model="formProduto.descricao" placeholder="Descricao (opcional)" maxlength="255" class="inp" rows="2"></textarea>
+          <div class="grid grid-cols-2 gap-2">
+            <input x-model.number="formProduto.preco" type="number" step="0.01" min="0.01" placeholder="Preco (> 0)" required class="inp">
+            <input x-model.number="formProduto.estoque" type="number" min="0" step="1" placeholder="Estoque (>= 0)" required class="inp">
           </div>
-        </div>
+          <select x-model.number="formProduto.categoriaId" required class="inp">
+            <option value="">-- Categoria --</option>
+            <template x-for="c in categorias" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+          </select>
+          <select x-model.number="formProduto.fornecedorId" required class="inp">
+            <option value="">-- Fornecedor --</option>
+            <template x-for="f in fornecedores" :key="f.id"><option :value="f.id" x-text="f.nome"></option></template>
+          </select>
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Produtos</h2><button @click="loadProdutos()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
           <table class="w-full text-sm">
@@ -196,7 +174,7 @@
                 <tr class="border-t border-slate-100 hover:bg-slate-50">
                   <td class="px-4 py-2 text-slate-400" x-text="p.id"></td>
                   <td class="px-4 py-2 font-semibold" x-text="p.nome"></td>
-                  <td class="px-4 py-2 text-right text-emerald-700 font-semibold" x-text="'R$ ' + p.preco.toFixed(2)"></td>
+                  <td class="px-4 py-2 text-right text-emerald-700 font-semibold" x-text="fmtBRL(p.preco)"></td>
                   <td class="px-4 py-2 text-right" :class="p.estoque > 0 ? 'text-slate-700' : 'text-rose-600 font-bold'" x-text="p.estoque"></td>
                   <td class="px-4 py-2 text-xs text-slate-500" x-text="nomeCategoria(p.categoriaId)"></td>
                   <td class="px-4 py-2 text-right"><button @click="deleteProduto(p.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
@@ -209,23 +187,20 @@
       </div>
     </section>
 
-    <!-- ENDERECOS -->
     <section x-show="tab === 'enderecos'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <form @submit.prevent="createEndereco()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
           <h2 class="font-black text-lg mb-1">Novo endereco</h2>
-          <p class="text-xs text-slate-500 mb-4">ViaCEP preenche logradouro/bairro/cidade/uf</p>
-          <div class="space-y-3">
-            <select x-model.number="formEndereco.clienteId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Cliente --</option>
-              <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome + ' (#' + c.id + ')'"></option></template>
-            </select>
-            <input x-model="formEndereco.cep" placeholder="CEP (8 digitos)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formEndereco.numero" placeholder="Numero" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <input x-model="formEndereco.complemento" placeholder="Complemento (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <button @click="createEndereco()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
-          </div>
-        </div>
+          <p class="text-xs text-slate-500 mb-2">ViaCEP preenche logradouro/bairro/cidade/uf</p>
+          <select x-model.number="formEndereco.clienteId" required class="inp">
+            <option value="">-- Cliente --</option>
+            <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome + ' (#' + c.id + ')'"></option></template>
+          </select>
+          <input x-model="formEndereco.cep" @input="formEndereco.cep = maskCep($event.target.value)" placeholder="00000-000" maxlength="9" required class="inp">
+          <input x-model="formEndereco.numero" placeholder="Numero" maxlength="10" required class="inp">
+          <input x-model="formEndereco.complemento" placeholder="Complemento (opcional)" maxlength="60" class="inp">
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Enderecos</h2><button @click="loadEnderecos()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
           <table class="w-full text-sm">
@@ -234,7 +209,7 @@
               <template x-for="e in enderecos" :key="e.id">
                 <tr class="border-t border-slate-100 hover:bg-slate-50">
                   <td class="px-4 py-2 text-slate-400" x-text="e.id"></td>
-                  <td class="px-4 py-2 font-mono text-xs" x-text="e.cep"></td>
+                  <td class="px-4 py-2 font-mono text-xs" x-text="fmtCep(e.cep)"></td>
                   <td class="px-4 py-2" x-text="e.logradouro + ', ' + e.numero"></td>
                   <td class="px-4 py-2 text-xs text-slate-600" x-text="e.cidade + '/' + e.uf"></td>
                   <td class="px-4 py-2 text-right"><button @click="deleteEndereco(e.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
@@ -247,26 +222,26 @@
       </div>
     </section>
 
-    <!-- PEDIDOS -->
     <section x-show="tab === 'pedidos'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-          <h2 class="font-black text-lg mb-4">Novo pedido</h2>
-          <div class="space-y-3">
-            <select x-model.number="formPedido.clienteId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Cliente --</option>
-              <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
-            </select>
-            <select x-model.number="formPedido.enderecoId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Endereco --</option>
-              <template x-for="e in enderecos" :key="e.id"><option :value="e.id" x-text="e.cep + ' - ' + e.logradouro + ', ' + e.numero"></option></template>
-            </select>
-            <select x-model="formPedido.status" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option>pendente</option><option>pago</option><option>enviado</option><option>cancelado</option>
-            </select>
-            <button @click="createPedido()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Criar pedido</button>
-          </div>
-        </div>
+        <form @submit.prevent="createPedido()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
+          <h2 class="font-black text-lg mb-2">Novo pedido</h2>
+          <select x-model.number="formPedido.clienteId" required class="inp">
+            <option value="">-- Cliente --</option>
+            <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+          </select>
+          <select x-model.number="formPedido.enderecoId" required class="inp">
+            <option value="">-- Endereco --</option>
+            <template x-for="e in enderecos" :key="e.id"><option :value="e.id" x-text="fmtCep(e.cep) + ' - ' + e.logradouro + ', ' + e.numero"></option></template>
+          </select>
+          <select x-model="formPedido.status" required class="inp">
+            <option value="pendente">pendente</option>
+            <option value="pago">pago</option>
+            <option value="enviado">enviado</option>
+            <option value="cancelado">cancelado</option>
+          </select>
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Criar pedido</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Pedidos</h2><button @click="loadPedidos()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
           <table class="w-full text-sm">
@@ -277,7 +252,7 @@
                   <td class="px-4 py-2 text-slate-400" x-text="p.id"></td>
                   <td class="px-4 py-2 font-semibold" x-text="nomeCliente(p.clienteId)"></td>
                   <td class="px-4 py-2"><span class="text-xs px-2 py-1 rounded-full" :class="statusColor(p.status)" x-text="p.status"></span></td>
-                  <td class="px-4 py-2 text-right text-emerald-700 font-black" x-text="'R$ ' + p.valorTotal.toFixed(2)"></td>
+                  <td class="px-4 py-2 text-right text-emerald-700 font-black" x-text="fmtBRL(p.valorTotal)"></td>
                   <td class="px-4 py-2 text-right"><button @click="deletePedido(p.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
                 </tr>
               </template>
@@ -288,25 +263,22 @@
       </div>
     </section>
 
-    <!-- ITENS PEDIDO -->
     <section x-show="tab === 'itens'" x-transition>
       <div class="grid lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+        <form @submit.prevent="createItem()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
           <h2 class="font-black text-lg mb-1">Novo item</h2>
-          <p class="text-xs text-slate-500 mb-4">Preco vem do produto; estoque eh descontado automatico.</p>
-          <div class="space-y-3">
-            <select x-model.number="formItem.pedidoId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Pedido --</option>
-              <template x-for="p in pedidos" :key="p.id"><option :value="p.id" x-text="'Pedido #' + p.id + ' - ' + nomeCliente(p.clienteId)"></option></template>
-            </select>
-            <select x-model.number="formItem.produtoId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-              <option value="">-- Produto --</option>
-              <template x-for="p in produtos" :key="p.id"><option :value="p.id" x-text="p.nome + ' (R$ ' + p.preco.toFixed(2) + ', estoque ' + p.estoque + ')'"></option></template>
-            </select>
-            <input x-model.number="formItem.quantidade" type="number" min="1" placeholder="Quantidade" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-            <button @click="createItem()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Adicionar</button>
-          </div>
-        </div>
+          <p class="text-xs text-slate-500 mb-2">Preco vem do produto; estoque eh descontado automatico.</p>
+          <select x-model.number="formItem.pedidoId" required class="inp">
+            <option value="">-- Pedido --</option>
+            <template x-for="p in pedidos" :key="p.id"><option :value="p.id" x-text="'Pedido #' + p.id + ' - ' + nomeCliente(p.clienteId)"></option></template>
+          </select>
+          <select x-model.number="formItem.produtoId" required class="inp">
+            <option value="">-- Produto --</option>
+            <template x-for="p in produtos" :key="p.id"><option :value="p.id" x-text="p.nome + ' (' + fmtBRL(p.preco) + ', estoque ' + p.estoque + ')'"></option></template>
+          </select>
+          <input x-model.number="formItem.quantidade" type="number" min="1" step="1" placeholder="Quantidade (min 1)" required class="inp">
+          <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Adicionar</button>
+        </form>
         <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Itens de pedido</h2><button @click="loadItens()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
           <table class="w-full text-sm">
@@ -318,7 +290,7 @@
                   <td class="px-4 py-2" x-text="'#' + i.pedidoId"></td>
                   <td class="px-4 py-2 font-semibold" x-text="nomeProduto(i.produtoId)"></td>
                   <td class="px-4 py-2 text-right" x-text="i.quantidade"></td>
-                  <td class="px-4 py-2 text-right text-emerald-700" x-text="'R$ ' + i.precoUnitario.toFixed(2)"></td>
+                  <td class="px-4 py-2 text-right text-emerald-700" x-text="fmtBRL(i.precoUnitario)"></td>
                   <td class="px-4 py-2 text-right"><button @click="deleteItem(i.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">remover</button></td>
                 </tr>
               </template>
@@ -329,28 +301,26 @@
       </div>
     </section>
 
-    <!-- VIACEP -->
     <section x-show="tab === 'viacep'" x-transition>
       <div class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
         <h2 class="font-black text-xl mb-1">Consulta ViaCEP</h2>
-        <p class="text-sm text-slate-500 mb-5">Testa a integracao com a API externa viacep.com.br</p>
-        <div class="flex gap-2">
-          <input x-model="cepInput" placeholder="Digita o CEP (ex: 01001000)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2.5 text-sm" @keyup.enter="consultarCep()">
-          <button @click="consultarCep()" class="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-5 py-2.5 text-sm font-semibold">Consultar</button>
-        </div>
+        <p class="text-sm text-slate-500 mb-5">Testa a integracao com viacep.com.br</p>
+        <form @submit.prevent="consultarCep()" class="flex gap-2">
+          <input x-model="cepInput" @input="cepInput = maskCep($event.target.value)" placeholder="00000-000" maxlength="9" required class="inp flex-1 !py-2.5">
+          <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-5 py-2.5 text-sm font-semibold">Consultar</button>
+        </form>
         <div x-show="cepResult" class="mt-6 bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto">
           <pre x-text="JSON.stringify(cepResult, null, 2)"></pre>
         </div>
       </div>
     </section>
 
-    <!-- FILTROS -->
     <section x-show="tab === 'filtros'" x-transition>
       <div class="grid md:grid-cols-2 gap-6">
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <h3 class="font-black mb-3">Pedidos por cliente</h3>
           <div class="flex gap-2 mb-3">
-            <select x-model.number="filtroClienteId" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <select x-model.number="filtroClienteId" class="inp flex-1">
               <option value="">-- Cliente --</option>
               <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
             </select>
@@ -361,7 +331,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <h3 class="font-black mb-3">Enderecos por cliente</h3>
           <div class="flex gap-2 mb-3">
-            <select x-model.number="filtroClienteId2" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <select x-model.number="filtroClienteId2" class="inp flex-1">
               <option value="">-- Cliente --</option>
               <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
             </select>
@@ -372,7 +342,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <h3 class="font-black mb-3">Produtos por categoria</h3>
           <div class="flex gap-2 mb-3">
-            <select x-model.number="filtroCategoriaId" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <select x-model.number="filtroCategoriaId" class="inp flex-1">
               <option value="">-- Categoria --</option>
               <template x-for="c in categorias" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
             </select>
@@ -383,7 +353,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
           <h3 class="font-black mb-3">Itens por pedido</h3>
           <div class="flex gap-2 mb-3">
-            <select x-model.number="filtroPedidoId" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <select x-model.number="filtroPedidoId" class="inp flex-1">
               <option value="">-- Pedido --</option>
               <template x-for="p in pedidos" :key="p.id"><option :value="p.id" x-text="'#' + p.id"></option></template>
             </select>
@@ -429,34 +399,52 @@ function app() {
     itens: [],        formItem: { pedidoId: '', produtoId: '', quantidade: 1 },
 
     cepInput: '', cepResult: null,
-
     filtroClienteId: '',   filtroPedidosCliente: null,
     filtroClienteId2: '',  filtroEnderecosCliente: null,
     filtroCategoriaId: '', filtroProdutosCategoria: null,
     filtroPedidoId: '',    filtroItensPedido: null,
 
-    async init() {
-      await this.checkStatus();
-      await this.loadAll();
+    // ============== MASCARAS ==============
+    onlyDigits(v) { return (v || '').toString().replace(/\D/g, ''); },
+
+    maskCpf(v) {
+      v = this.onlyDigits(v).slice(0, 11);
+      return v
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+    },
+    maskCnpj(v) {
+      v = this.onlyDigits(v).slice(0, 14);
+      return v
+        .replace(/(\d{2})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1/$2')
+        .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+    },
+    maskCep(v) {
+      v = this.onlyDigits(v).slice(0, 8);
+      return v.replace(/(\d{5})(\d{1,3})$/, '$1-$2');
+    },
+    maskPhone(v) {
+      v = this.onlyDigits(v).slice(0, 11);
+      if (v.length === 0) return '';
+      if (v.length <= 2)  return '(' + v;
+      if (v.length <= 6)  return '(' + v.slice(0,2) + ') ' + v.slice(2);
+      if (v.length <= 10) return '(' + v.slice(0,2) + ') ' + v.slice(2,6) + '-' + v.slice(6);
+      return '(' + v.slice(0,2) + ') ' + v.slice(2,7) + '-' + v.slice(7,11);
     },
 
-    async checkStatus() {
-      try { const r = await fetch('/status'); this.status.online = r.ok; }
-      catch { this.status.online = false; }
-    },
+    fmtCpf(d)  { const v = this.onlyDigits(d); return v.length === 11 ? this.maskCpf(v) : d; },
+    fmtCnpj(d) { const v = this.onlyDigits(d); return v.length === 14 ? this.maskCnpj(v) : d; },
+    fmtCep(d)  { const v = this.onlyDigits(d); return v.length === 8  ? this.maskCep(v)  : d; },
+    fmtBRL(n)  { return 'R$ ' + Number(n || 0).toFixed(2).replace('.', ','); },
 
-    async loadAll() {
-      await Promise.allSettled([
-        this.loadClientes(), this.loadEnderecos(), this.loadCategorias(),
-        this.loadFornecedores(), this.loadProdutos(), this.loadPedidos(), this.loadItens(),
-      ]);
-    },
-
-    showToast(msg, err = false) {
-      this.toast = { show: true, msg, err };
-      clearTimeout(this._t);
-      this._t = setTimeout(() => this.toast.show = false, 3500);
-    },
+    // ============== CORE ==============
+    async init() { await this.checkStatus(); await this.loadAll(); },
+    async checkStatus() { try { const r = await fetch('/status'); this.status.online = r.ok; } catch { this.status.online = false; } },
+    async loadAll() { await Promise.allSettled([this.loadClientes(), this.loadEnderecos(), this.loadCategorias(), this.loadFornecedores(), this.loadProdutos(), this.loadPedidos(), this.loadItens()]); },
+    showToast(msg, err = false) { this.toast = { show: true, msg, err }; clearTimeout(this._t); this._t = setTimeout(() => this.toast.show = false, 3500); },
 
     async api(method, path, body) {
       const opts = { method, headers: { 'Content-Type': 'application/json' } };
@@ -486,11 +474,21 @@ function app() {
     async loadPedidos()      { try { this.pedidos      = this.normalize(await this.api('GET', '/pedidos')); }      catch(e) { this.showToast('Pedidos: ' + e.message, true); } },
     async loadItens()        { try { this.itens        = this.normalize(await this.api('GET', '/itens-pedido')); } catch(e) { this.showToast('Itens: ' + e.message, true); } },
 
+    // ============== CRUD ==============
     async createCliente() {
-      try { await this.api('POST', '/clientes', this.formCliente);
+      const cpfLimpo = this.onlyDigits(this.formCliente.cpf);
+      if (cpfLimpo.length !== 11) { this.showToast('CPF deve ter 11 digitos', true); return; }
+      try {
+        const body = {
+          nome: this.formCliente.nome.trim(),
+          email: this.formCliente.email.trim().toLowerCase(),
+          telefone: this.formCliente.telefone ? this.onlyDigits(this.formCliente.telefone) : null,
+          cpf: cpfLimpo,
+        };
+        await this.api('POST', '/clientes', body);
         this.formCliente = { nome: '', email: '', telefone: '', cpf: '' };
-        await this.loadClientes(); this.showToast('Cliente cadastrado'); }
-      catch(e) { this.showToast(e.message, true); }
+        await this.loadClientes(); this.showToast('Cliente cadastrado');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deleteCliente(id) { if (!confirm('Apagar cliente #' + id + '?')) return;
       try { await this.api('DELETE', '/clientes/' + id); await this.loadClientes(); this.showToast('Cliente removido'); }
@@ -498,10 +496,12 @@ function app() {
     },
 
     async createCategoria() {
-      try { await this.api('POST', '/categorias', { nome: this.formCategoria.nome, descricao: this.formCategoria.descricao || null });
+      try {
+        const body = { nome: this.formCategoria.nome.trim(), descricao: this.formCategoria.descricao?.trim() || null };
+        await this.api('POST', '/categorias', body);
         this.formCategoria = { nome: '', descricao: '' };
-        await this.loadCategorias(); this.showToast('Categoria cadastrada'); }
-      catch(e) { this.showToast(e.message, true); }
+        await this.loadCategorias(); this.showToast('Categoria cadastrada');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deleteCategoria(id) { if (!confirm('Apagar categoria #' + id + '?')) return;
       try { await this.api('DELETE', '/categorias/' + id); await this.loadCategorias(); this.showToast('Removida'); }
@@ -509,10 +509,19 @@ function app() {
     },
 
     async createFornecedor() {
-      try { await this.api('POST', '/fornecedores', this.formFornecedor);
+      const cnpjLimpo = this.onlyDigits(this.formFornecedor.cnpj);
+      if (cnpjLimpo.length !== 14) { this.showToast('CNPJ deve ter 14 digitos', true); return; }
+      try {
+        const body = {
+          nome: this.formFornecedor.nome.trim(),
+          cnpj: cnpjLimpo,
+          email: this.formFornecedor.email?.trim() || null,
+          telefone: this.formFornecedor.telefone ? this.onlyDigits(this.formFornecedor.telefone) : null,
+        };
+        await this.api('POST', '/fornecedores', body);
         this.formFornecedor = { nome: '', cnpj: '', email: '', telefone: '' };
-        await this.loadFornecedores(); this.showToast('Fornecedor cadastrado'); }
-      catch(e) { this.showToast(e.message, true); }
+        await this.loadFornecedores(); this.showToast('Fornecedor cadastrado');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deleteFornecedor(id) { if (!confirm('Apagar fornecedor #' + id + '?')) return;
       try { await this.api('DELETE', '/fornecedores/' + id); await this.loadFornecedores(); this.showToast('Removido'); }
@@ -520,10 +529,15 @@ function app() {
     },
 
     async createProduto() {
-      try { await this.api('POST', '/produtos', this.formProduto);
+      if (!this.formProduto.categoriaId || !this.formProduto.fornecedorId) { this.showToast('Escolhe categoria e fornecedor', true); return; }
+      if (this.formProduto.preco <= 0) { this.showToast('Preco tem que ser maior que 0', true); return; }
+      if (this.formProduto.estoque < 0) { this.showToast('Estoque nao pode ser negativo', true); return; }
+      try {
+        const body = { ...this.formProduto, nome: this.formProduto.nome.trim(), descricao: this.formProduto.descricao?.trim() || null };
+        await this.api('POST', '/produtos', body);
         this.formProduto = { nome: '', descricao: '', preco: 0, estoque: 0, categoriaId: '', fornecedorId: '' };
-        await this.loadProdutos(); this.showToast('Produto cadastrado'); }
-      catch(e) { this.showToast(e.message, true); }
+        await this.loadProdutos(); this.showToast('Produto cadastrado');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deleteProduto(id) { if (!confirm('Apagar produto #' + id + '?')) return;
       try { await this.api('DELETE', '/produtos/' + id); await this.loadProdutos(); this.showToast('Removido'); }
@@ -531,10 +545,19 @@ function app() {
     },
 
     async createEndereco() {
-      try { await this.api('POST', '/enderecos', this.formEndereco);
+      const cepLimpo = this.onlyDigits(this.formEndereco.cep);
+      if (cepLimpo.length !== 8) { this.showToast('CEP deve ter 8 digitos', true); return; }
+      try {
+        const body = {
+          clienteId: this.formEndereco.clienteId,
+          cep: cepLimpo,
+          numero: this.formEndereco.numero.trim(),
+          complemento: this.formEndereco.complemento?.trim() || null,
+        };
+        await this.api('POST', '/enderecos', body);
         this.formEndereco = { clienteId: '', cep: '', numero: '', complemento: '' };
-        await this.loadEnderecos(); this.showToast('Endereco cadastrado via ViaCEP'); }
-      catch(e) { this.showToast(e.message, true); }
+        await this.loadEnderecos(); this.showToast('Endereco cadastrado via ViaCEP');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deleteEndereco(id) { if (!confirm('Apagar endereco #' + id + '?')) return;
       try { await this.api('DELETE', '/enderecos/' + id); await this.loadEnderecos(); this.showToast('Removido'); }
@@ -546,8 +569,8 @@ function app() {
         const body = { ...this.formPedido, valorTotal: 0, criadoEm: new Date().toISOString() };
         await this.api('POST', '/pedidos', body);
         this.formPedido = { clienteId: '', enderecoId: '', status: 'pendente' };
-        await this.loadPedidos(); this.showToast('Pedido criado'); }
-      catch(e) { this.showToast(e.message, true); }
+        await this.loadPedidos(); this.showToast('Pedido criado');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deletePedido(id) { if (!confirm('Apagar pedido #' + id + '?')) return;
       try { await this.api('DELETE', '/pedidos/' + id); await this.loadPedidos(); this.showToast('Removido'); }
@@ -555,22 +578,25 @@ function app() {
     },
 
     async createItem() {
-      try { await this.api('POST', '/itens-pedido', this.formItem);
+      if (!this.formItem.quantidade || this.formItem.quantidade < 1) { this.showToast('Quantidade minima: 1', true); return; }
+      try {
+        await this.api('POST', '/itens-pedido', this.formItem);
         this.formItem = { pedidoId: '', produtoId: '', quantidade: 1 };
         await Promise.all([this.loadItens(), this.loadPedidos(), this.loadProdutos()]);
-        this.showToast('Item adicionado'); }
-      catch(e) { this.showToast(e.message, true); }
+        this.showToast('Item adicionado');
+      } catch(e) { this.showToast(e.message, true); }
     },
     async deleteItem(id) { if (!confirm('Remover item #' + id + '?')) return;
       try { await this.api('DELETE', '/itens-pedido/' + id);
         await Promise.all([this.loadItens(), this.loadPedidos(), this.loadProdutos()]);
-        this.showToast('Removido'); }
-      catch(e) { this.showToast(e.message, true); }
+        this.showToast('Removido');
+      } catch(e) { this.showToast(e.message, true); }
     },
 
     async consultarCep() {
-      if (!this.cepInput) return;
-      try { this.cepResult = await this.api('GET', '/viacep/' + encodeURIComponent(this.cepInput)); this.showToast('CEP encontrado'); }
+      const cepLimpo = this.onlyDigits(this.cepInput);
+      if (cepLimpo.length !== 8) { this.showToast('CEP deve ter 8 digitos', true); return; }
+      try { this.cepResult = await this.api('GET', '/viacep/' + cepLimpo); this.showToast('CEP encontrado'); }
       catch(e) { this.cepResult = { erro: e.message }; this.showToast(e.message, true); }
     },
 
