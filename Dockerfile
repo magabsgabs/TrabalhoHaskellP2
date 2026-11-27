@@ -6,8 +6,9 @@ FROM haskell:9.2.8-slim AS builder
 WORKDIR /app
 
 # bibliotecas de sistema que o Yesod/Persistent precisa pra linkar
+# (projeto usa SQLite, nao PostgreSQL — nao precisa libpq-dev)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq-dev zlib1g-dev libgmp-dev \
+    zlib1g-dev libgmp-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # 1) copia so as declaracoes de deps pra aproveitar cache
@@ -23,10 +24,12 @@ RUN stack build --copy-bins --local-bin-path /app/bin --no-nix
 # ============================================================
 # STAGE 2 — runtime (bem menor, so o que precisa pra rodar)
 # ============================================================
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
+# bookworm pra evitar 404 nos repos de security do bullseye (EOL).
+# Nao precisa libpq5 (projeto usa SQLite).
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates libgmp10 libpq5 zlib1g netbase \
+    ca-certificates libgmp10 zlib1g netbase \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
