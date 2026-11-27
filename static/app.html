@@ -55,7 +55,7 @@
         <form @submit.prevent="createCliente()" class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5 space-y-3">
           <h2 class="font-black text-lg mb-2">Novo cliente</h2>
           <input x-model="formCliente.nome" placeholder="Nome (min 2 letras)" minlength="2" maxlength="80" required class="inp">
-          <input x-model="formCliente.email" type="email" placeholder="email@exemplo.com" required maxlength="120" class="inp">
+          <input x-model="formCliente.email" type="email" pattern="[^\s@]+@[^\s@]+\.[^\s@]{2,}" title="Precisa ser um email valido, ex: nome@dominio.com" placeholder="email@exemplo.com" required maxlength="120" class="inp">
           <input x-model="formCliente.telefone" @input="formCliente.telefone = maskPhone($event.target.value)" placeholder="(11) 99999-8888" maxlength="15" class="inp">
           <input x-model="formCliente.cpf" @input="formCliente.cpf = maskCpf($event.target.value)" placeholder="000.000.000-00" maxlength="14" required class="inp">
           <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
@@ -120,7 +120,7 @@
           <h2 class="font-black text-lg mb-2">Novo fornecedor</h2>
           <input x-model="formFornecedor.nome" placeholder="Nome (min 2)" minlength="2" maxlength="100" required class="inp">
           <input x-model="formFornecedor.cnpj" @input="formFornecedor.cnpj = maskCnpj($event.target.value)" placeholder="00.000.000/0000-00" maxlength="18" required class="inp">
-          <input x-model="formFornecedor.email" type="email" placeholder="Email (opcional)" maxlength="120" class="inp">
+          <input x-model="formFornecedor.email" type="email" pattern="[^\s@]+@[^\s@]+\.[^\s@]{2,}" title="Precisa ser um email valido, ex: nome@dominio.com" placeholder="Email (opcional)" maxlength="120" class="inp">
           <input x-model="formFornecedor.telefone" @input="formFornecedor.telefone = maskPhone($event.target.value)" placeholder="(11) 3333-4444 (opcional)" maxlength="15" class="inp">
           <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
         </form>
@@ -440,6 +440,12 @@ function app() {
     fmtCep(d)  { const v = this.onlyDigits(d); return v.length === 8  ? this.maskCep(v)  : d; },
     fmtBRL(n)  { return 'R$ ' + Number(n || 0).toFixed(2).replace('.', ','); },
 
+    // email precisa ter formato algo@dominio.tld (tld com minimo 2 letras)
+    // o HTML5 type="email" so exige @ (deixa "a@b" passar), aqui apertamos
+    emailValido(e) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test((e || '').trim());
+    },
+
     // ============== CORE ==============
     async init() { await this.checkStatus(); await this.loadAll(); },
     async checkStatus() { try { const r = await fetch('/status'); this.status.online = r.ok; } catch { this.status.online = false; } },
@@ -476,6 +482,7 @@ function app() {
 
     // ============== CRUD ==============
     async createCliente() {
+      if (!this.emailValido(this.formCliente.email)) { this.showToast('Email invalido (ex: nome@dominio.com)', true); return; }
       const cpfLimpo = this.onlyDigits(this.formCliente.cpf);
       if (cpfLimpo.length !== 11) { this.showToast('CPF deve ter 11 digitos', true); return; }
       try {
@@ -511,6 +518,10 @@ function app() {
     async createFornecedor() {
       const cnpjLimpo = this.onlyDigits(this.formFornecedor.cnpj);
       if (cnpjLimpo.length !== 14) { this.showToast('CNPJ deve ter 14 digitos', true); return; }
+      // email eh opcional aqui, so valida se tiver algo
+      if (this.formFornecedor.email && !this.emailValido(this.formFornecedor.email)) {
+        this.showToast('Email invalido (ex: contato@empresa.com)', true); return;
+      }
       try {
         const body = {
           nome: this.formFornecedor.nome.trim(),
