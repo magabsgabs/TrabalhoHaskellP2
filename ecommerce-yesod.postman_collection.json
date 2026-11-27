@@ -1,0 +1,425 @@
+{
+  "info": {
+    "name": "Ecommerce Yesod API",
+    "description": "Coleção completa para testar todos os endpoints da API REST de E-commerce em Yesod (Haskell).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Status e ViaCEP",
+      "item": [
+        {
+          "name": "Verificar Status da API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/status"
+          }
+        },
+        {
+          "name": "Consultar CEP (ViaCEP)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/viacep/01001000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categorias",
+      "item": [
+        {
+          "name": "Listar Categorias",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/categorias"
+          }
+        },
+        {
+          "name": "Buscar Categoria por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/categorias/1"
+          }
+        },
+        {
+          "name": "Criar Categoria",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Eletrônicos\",\n  \"descricao\": \"Periféricos e dispositivos eletrônicos\"\n}"
+            },
+            "url": "{{baseUrl}}/categorias"
+          }
+        },
+        {
+          "name": "Atualizar Categoria",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Eletrônicos e Games\",\n  \"descricao\": \"Periféricos, consoles e acessórios\"\n}"
+            },
+            "url": "{{baseUrl}}/categorias/1"
+          }
+        },
+        {
+          "name": "Deletar Categoria",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/categorias/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Produtos",
+      "item": [
+        {
+          "name": "Listar Produtos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/produtos"
+          }
+        },
+        {
+          "name": "Buscar Produto por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/produtos/1"
+          }
+        },
+        {
+          "name": "Criar Produto",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Teclado Mecânico\",\n  \"descricao\": \"Switch Blue RGB\",\n  \"preco\": 299.90,\n  \"estoque\": 15,\n  \"categoriaId\": 1\n}"
+            },
+            "url": "{{baseUrl}}/produtos"
+          }
+        },
+        {
+          "name": "Atualizar Produto",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Teclado Mecânico Pro\",\n  \"descricao\": \"Switch Brown RGB\",\n  \"preco\": 349.90,\n  \"estoque\": 10,\n  \"categoriaId\": 1\n}"
+            },
+            "url": "{{baseUrl}}/produtos/1"
+          }
+        },
+        {
+          "name": "Deletar Produto",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/produtos/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clientes",
+      "item": [
+        {
+          "name": "Listar Clientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/clientes"
+          }
+        },
+        {
+          "name": "Buscar Cliente por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/clientes/1"
+          }
+        },
+        {
+          "name": "Criar Cliente",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"email\": \"joao@email.com\",\n  \"telefone\": \"13999998888\",\n  \"cpf\": \"12345678901\"\n}"
+            },
+            "url": "{{baseUrl}}/clientes"
+          }
+        },
+        {
+          "name": "Atualizar Cliente",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva Atualizado\",\n  \"email\": \"joao.novo@email.com\",\n  \"telefone\": \"13988887777\",\n  \"cpf\": \"12345678901\"\n}"
+            },
+            "url": "{{baseUrl}}/clientes/1"
+          }
+        },
+        {
+          "name": "Deletar Cliente",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/clientes/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Endereços",
+      "item": [
+        {
+          "name": "Listar Endereços",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/enderecos"
+          }
+        },
+        {
+          "name": "Buscar Endereço por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/enderecos/1"
+          }
+        },
+        {
+          "name": "Criar Endereço (com ViaCEP)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 1,\n  \"cep\": \"01001000\",\n  \"numero\": \"100\",\n  \"complemento\": \"Apto 12\"\n}"
+            },
+            "url": "{{baseUrl}}/enderecos"
+          }
+        },
+        {
+          "name": "Atualizar Endereço",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 1,\n  \"cep\": \"01001000\",\n  \"numero\": \"250\",\n  \"complemento\": \"Casa\"\n}"
+            },
+            "url": "{{baseUrl}}/enderecos/1"
+          }
+        },
+        {
+          "name": "Deletar Endereço",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/enderecos/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fornecedores",
+      "item": [
+        {
+          "name": "Listar Fornecedores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fornecedores"
+          }
+        },
+        {
+          "name": "Buscar Fornecedor por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/fornecedores/1"
+          }
+        },
+        {
+          "name": "Criar Fornecedor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Tech Distribuidora Ltda\",\n  \"cnpj\": \"12345678000199\",\n  \"email\": \"contato@techdist.com.br\",\n  \"telefone\": \"1133334444\"\n}"
+            },
+            "url": "{{baseUrl}}/fornecedores"
+          }
+        },
+        {
+          "name": "Atualizar Fornecedor",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Tech Distribuidora Brasil\",\n  \"cnpj\": \"12345678000199\",\n  \"email\": \"vendas@techdist.com.br\",\n  \"telefone\": \"1133335555\"\n}"
+            },
+            "url": "{{baseUrl}}/fornecedores/1"
+          }
+        },
+        {
+          "name": "Deletar Fornecedor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/fornecedores/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pedidos",
+      "item": [
+        {
+          "name": "Listar Pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "Buscar Pedido por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/pedidos/1"
+          }
+        },
+        {
+          "name": "Criar Pedido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 1,\n  \"enderecoId\": 1,\n  \"status\": \"PENDENTE\"\n}"
+            },
+            "url": "{{baseUrl}}/pedidos"
+          }
+        },
+        {
+          "name": "Atualizar Pedido",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteId\": 1,\n  \"enderecoId\": 1,\n  \"status\": \"PAGO\"\n}"
+            },
+            "url": "{{baseUrl}}/pedidos/1"
+          }
+        },
+        {
+          "name": "Deletar Pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/pedidos/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Itens do Pedido",
+      "item": [
+        {
+          "name": "Listar Itens de Pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/itens-pedido"
+          }
+        },
+        {
+          "name": "Adicionar Item ao Pedido",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pedidoId\": 1,\n  \"produtoId\": 1,\n  \"quantidade\": 2\n}"
+            },
+            "url": "{{baseUrl}}/itens-pedido"
+          }
+        },
+        {
+          "name": "Remover Item do Pedido",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/itens-pedido/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Filtros e Consultas",
+      "item": [
+        {
+          "name": "Pedidos de um Cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/clientes/1/pedidos"
+          }
+        },
+        {
+          "name": "Endereços de um Cliente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/clientes/1/enderecos"
+          }
+        },
+        {
+          "name": "Produtos de uma Categoria",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/categorias/1/produtos"
+          }
+        },
+        {
+          "name": "Itens de um Pedido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/pedidos/1/itens"
+          }
+        }
+      ]
+    }
+  ]
+}

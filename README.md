@@ -1,43 +1,40 @@
-## Haskell Setup
+# E-commerce API REST em Haskell (Yesod + SQLite)
 
-1. If you haven't already, [install Stack](https://haskell-lang.org/get-started)
-	* On POSIX systems, this is usually `curl -sSL https://get.haskellstack.org/ | sh`
-2. Install the `yesod` command line tool: `stack install yesod-bin --install-ghc`
-3. Build libraries: `stack build`
+## 1. Descrição do Projeto
+API REST desenvolvida em **Haskell** utilizando o framework **Yesod** e banco de dados **SQLite** (via Persistent) para o gerenciamento completo de um sistema de e-commerce. O projeto conta com operações CRUD, validações de regras de negócio, integração com a API externa **ViaCEP**, rotas de filtros por relacionamento, suporte a CORS e tratamento padronizado de erros em JSON.
 
-If you have trouble, refer to the [Yesod Quickstart guide](https://www.yesodweb.com/page/quickstart) for additional detail.
+## 2. Integrantes do Grupo
+* **Pessoa 1:** Maria Gabriella Giacomini  — Base do projeto, modelagem, CORS, Categoria e Produto
+* **Pessoa 2:** Henrique Ferreira Mendes — CRUD de Cliente, integração ViaCEP e CRUD de Endereço
+* **Pessoa 3:** Giovanna Campos Gomes Cardim — CRUD de Fornecedor, Pedido e ItemPedido (estoque e total)
+* **Pessoa 4:** Guilherme de Oliveira Ferreira — Rotas de filtros, coleção do Postman e documentação (`README.md`)
 
-## Development
+## 3. Tecnologias Utilizadas
+* **Linguagem:** Haskell (GHC via Stack)
+* **Framework Web:** Yesod
+* **ORM / Banco de Dados:** Persistent + SQLite
+* **Integração Externa:** API ViaCEP (`https://viacep.com.br/ws/{cep}/json/`)
+* **Testes de API:** Postman (`ecommerce-yesod.postman_collection.json`)
 
-Start a development server with:
+## 4. Modelagem do Banco de Dados
+O banco possui 7 entidades principais configuradas em `config/models.persistentmodels`:
+* **Categoria:** `nome`, `descricao`
+* **Produto:** `nome`, `descricao`, `preco`, `estoque`, `categoriaId`
+* **Cliente:** `nome`, `email`, `telefone`, `cpf`
+* **Endereco:** `clienteId`, `cep`, `logradouro`, `numero`, `complemento`, `bairro`, `cidade`, `uf`
+* **Fornecedor:** `nome`, `cnpj`, `email`, `telefone`
+* **Pedido:** `clienteId`, `enderecoId`, `status`, `valorTotal`, `criadoEm`
+* **ItemPedido:** `pedidoId`, `produtoId`, `quantidade`, `precoUnitario`
 
-```
-stack exec -- yesod devel
-```
+## 5. Como Executar o Projeto
 
-As your code changes, your site will be automatically recompiled and redeployed to localhost.
+### Pré-requisitos
+* [Git](https://git-scm.com/)
+* [Haskell Stack](https://docs.haskellstack.org/en/stable/) (no Windows: `winget install CommercialHaskell.Stack`)
 
-## Tests
+### Passo a passo
+Clone o repositório em um caminho **sem espaços** (ex: `C:\projetos`):
 
-```
-stack test --flag ecommerce-yesod:library-only --flag ecommerce-yesod:dev
-```
-
-(Because `yesod devel` passes the `library-only` and `dev` flags, matching those flags means you don't need to recompile between tests and development, and it disables optimization to speed up your test compile times).
-
-## Documentation
-
-* Read the [Yesod Book](https://www.yesodweb.com/book) online for free
-* Check [Stackage](http://stackage.org/) for documentation on the packages in your LTS Haskell version, or [search it using Hoogle](https://www.stackage.org/lts/hoogle?q=). Tip: Your LTS version is in your `stack.yaml` file.
-* For local documentation, use:
-	* `stack haddock --open` to generate Haddock documentation for your dependencies, and open that documentation in a browser
-	* `stack hoogle <function, module or type signature>` to generate a Hoogle database and search for your query
-* The [Yesod cookbook](https://github.com/yesodweb/yesod-cookbook) has sample code for various needs
-
-## Getting Help
-
-* Ask questions on [Stack Overflow, using the Yesod or Haskell tags](https://stackoverflow.com/questions/tagged/yesod+haskell)
-* Ask the [Yesod Google Group](https://groups.google.com/forum/#!forum/yesodweb)
-* There are several chatrooms you can ask for help:
-	* For IRC, try Freenode#yesod and Freenode#haskell
-	* [Functional Programming Slack](https://fpchat-invite.herokuapp.com/), in the #haskell, #haskell-beginners, or #yesod channels.
+```bash
+git clone [https://github.com/magabsgabs/TrabalhoHaskellP2.git](https://github.com/magabsgabs/TrabalhoHaskellP2.git)
+cd TrabalhoHaskellP2
