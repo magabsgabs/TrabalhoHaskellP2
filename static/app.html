@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>E-commerce API — Painel de Testes</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
+<style>
+  [x-cloak] { display: none !important; }
+  body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+  .scroll-x::-webkit-scrollbar { height: 6px; }
+  .scroll-x::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+<div x-data="app()" x-init="init()" x-cloak>
+
+  <!-- HEADER -->
+  <header class="bg-slate-900 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-3">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-black">E-commerce API</h1>
+        <p class="text-xs text-slate-400">Painel de Testes • Yesod + Haskell</p>
+      </div>
+      <div class="flex items-center gap-4 text-sm">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full" :class="status.online ? 'bg-emerald-400 animate-pulse' : 'bg-rose-500'"></span>
+          <span x-text="status.online ? 'API online' : 'offline'"></span>
+        </div>
+        <button @click="checkStatus()" class="text-xs bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded">recarregar status</button>
+      </div>
+    </div>
+    <nav class="max-w-7xl mx-auto px-4 flex gap-1 overflow-x-auto scroll-x">
+      <template x-for="t in tabs" :key="t.id">
+        <button @click="tab = t.id"
+                :class="tab === t.id ? 'bg-slate-50 text-slate-900 font-semibold' : 'text-slate-300 hover:bg-slate-800'"
+                class="px-4 py-2.5 rounded-t-lg text-sm whitespace-nowrap transition-colors">
+          <span x-text="t.label"></span>
+          <span x-show="t.count !== undefined" class="ml-1 text-xs opacity-70" x-text="'(' + t.count + ')'"></span>
+        </button>
+      </template>
+    </nav>
+  </header>
+
+  <!-- TOAST -->
+  <div x-show="toast.show" x-transition
+       :class="toast.err ? 'bg-rose-600' : 'bg-emerald-600'"
+       class="fixed top-6 right-6 z-50 text-white px-5 py-3 rounded-lg shadow-xl max-w-sm">
+    <p class="text-sm font-semibold" x-text="toast.msg"></p>
+  </div>
+
+  <!-- MAIN -->
+  <main class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- CLIENTES -->
+    <section x-show="tab === 'clientes'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-4">Novo cliente</h2>
+          <div class="space-y-3">
+            <input x-model="formCliente.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400">
+            <input x-model="formCliente.email" type="email" placeholder="email@exemplo.com" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formCliente.telefone" placeholder="Telefone (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formCliente.cpf" placeholder="CPF (11 digitos)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <button @click="createCliente()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+            <h2 class="font-black text-lg">Clientes</h2>
+            <button @click="loadClientes()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                <tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-left">Email</th><th class="px-4 py-2 text-left">CPF</th><th></th></tr>
+              </thead>
+              <tbody>
+                <template x-for="c in clientes" :key="c.id">
+                  <tr class="border-t border-slate-100 hover:bg-slate-50">
+                    <td class="px-4 py-2 text-slate-400" x-text="c.id"></td>
+                    <td class="px-4 py-2 font-semibold" x-text="c.nome"></td>
+                    <td class="px-4 py-2 text-slate-600" x-text="c.email"></td>
+                    <td class="px-4 py-2 text-slate-600 font-mono text-xs" x-text="c.cpf"></td>
+                    <td class="px-4 py-2 text-right">
+                      <button @click="deleteCliente(c.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button>
+                    </td>
+                  </tr>
+                </template>
+                <tr x-show="clientes.length === 0"><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum cliente cadastrado</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORIAS -->
+    <section x-show="tab === 'categorias'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-4">Nova categoria</h2>
+          <div class="space-y-3">
+            <input x-model="formCategoria.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <textarea x-model="formCategoria.descricao" placeholder="Descricao (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" rows="2"></textarea>
+            <button @click="createCategoria()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b border-slate-200 flex justify-between items-center">
+            <h2 class="font-black text-lg">Categorias</h2>
+            <button @click="loadCategorias()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button>
+          </div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-left">Descricao</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="c in categorias" :key="c.id">
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-2 text-slate-400" x-text="c.id"></td>
+                  <td class="px-4 py-2 font-semibold" x-text="c.nome"></td>
+                  <td class="px-4 py-2 text-slate-600" x-text="c.descricao || '-'"></td>
+                  <td class="px-4 py-2 text-right"><button @click="deleteCategoria(c.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
+                </tr>
+              </template>
+              <tr x-show="categorias.length === 0"><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhuma categoria</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORNECEDORES -->
+    <section x-show="tab === 'fornecedores'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-4">Novo fornecedor</h2>
+          <div class="space-y-3">
+            <input x-model="formFornecedor.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formFornecedor.cnpj" placeholder="CNPJ (14 digitos)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formFornecedor.email" type="email" placeholder="Email (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formFornecedor.telefone" placeholder="Telefone (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <button @click="createFornecedor()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Fornecedores</h2><button @click="loadFornecedores()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-left">CNPJ</th><th class="px-4 py-2 text-left">Email</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="f in fornecedores" :key="f.id">
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-2 text-slate-400" x-text="f.id"></td>
+                  <td class="px-4 py-2 font-semibold" x-text="f.nome"></td>
+                  <td class="px-4 py-2 font-mono text-xs" x-text="f.cnpj"></td>
+                  <td class="px-4 py-2 text-slate-600" x-text="f.email || '-'"></td>
+                  <td class="px-4 py-2 text-right"><button @click="deleteFornecedor(f.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
+                </tr>
+              </template>
+              <tr x-show="fornecedores.length === 0"><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum fornecedor</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRODUTOS -->
+    <section x-show="tab === 'produtos'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-4">Novo produto</h2>
+          <div class="space-y-3">
+            <input x-model="formProduto.nome" placeholder="Nome" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <textarea x-model="formProduto.descricao" placeholder="Descricao (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" rows="2"></textarea>
+            <div class="grid grid-cols-2 gap-2">
+              <input x-model.number="formProduto.preco" type="number" step="0.01" placeholder="Preco" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <input x-model.number="formProduto.estoque" type="number" placeholder="Estoque" class="border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            </div>
+            <select x-model.number="formProduto.categoriaId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Categoria --</option>
+              <template x-for="c in categorias" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <select x-model.number="formProduto.fornecedorId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Fornecedor --</option>
+              <template x-for="f in fornecedores" :key="f.id"><option :value="f.id" x-text="f.nome"></option></template>
+            </select>
+            <button @click="createProduto()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Produtos</h2><button @click="loadProdutos()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Nome</th><th class="px-4 py-2 text-right">Preco</th><th class="px-4 py-2 text-right">Estoque</th><th class="px-4 py-2 text-left">Cat.</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="p in produtos" :key="p.id">
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-2 text-slate-400" x-text="p.id"></td>
+                  <td class="px-4 py-2 font-semibold" x-text="p.nome"></td>
+                  <td class="px-4 py-2 text-right text-emerald-700 font-semibold" x-text="'R$ ' + p.preco.toFixed(2)"></td>
+                  <td class="px-4 py-2 text-right" :class="p.estoque > 0 ? 'text-slate-700' : 'text-rose-600 font-bold'" x-text="p.estoque"></td>
+                  <td class="px-4 py-2 text-xs text-slate-500" x-text="nomeCategoria(p.categoriaId)"></td>
+                  <td class="px-4 py-2 text-right"><button @click="deleteProduto(p.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
+                </tr>
+              </template>
+              <tr x-show="produtos.length === 0"><td colspan="6" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum produto</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ENDERECOS -->
+    <section x-show="tab === 'enderecos'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-1">Novo endereco</h2>
+          <p class="text-xs text-slate-500 mb-4">ViaCEP preenche logradouro/bairro/cidade/uf</p>
+          <div class="space-y-3">
+            <select x-model.number="formEndereco.clienteId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Cliente --</option>
+              <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome + ' (#' + c.id + ')'"></option></template>
+            </select>
+            <input x-model="formEndereco.cep" placeholder="CEP (8 digitos)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formEndereco.numero" placeholder="Numero" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <input x-model="formEndereco.complemento" placeholder="Complemento (opcional)" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <button @click="createEndereco()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Cadastrar</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Enderecos</h2><button @click="loadEnderecos()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">CEP</th><th class="px-4 py-2 text-left">Logradouro</th><th class="px-4 py-2 text-left">Cidade/UF</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="e in enderecos" :key="e.id">
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-2 text-slate-400" x-text="e.id"></td>
+                  <td class="px-4 py-2 font-mono text-xs" x-text="e.cep"></td>
+                  <td class="px-4 py-2" x-text="e.logradouro + ', ' + e.numero"></td>
+                  <td class="px-4 py-2 text-xs text-slate-600" x-text="e.cidade + '/' + e.uf"></td>
+                  <td class="px-4 py-2 text-right"><button @click="deleteEndereco(e.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
+                </tr>
+              </template>
+              <tr x-show="enderecos.length === 0"><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum endereco</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PEDIDOS -->
+    <section x-show="tab === 'pedidos'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-4">Novo pedido</h2>
+          <div class="space-y-3">
+            <select x-model.number="formPedido.clienteId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Cliente --</option>
+              <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <select x-model.number="formPedido.enderecoId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Endereco --</option>
+              <template x-for="e in enderecos" :key="e.id"><option :value="e.id" x-text="e.cep + ' - ' + e.logradouro + ', ' + e.numero"></option></template>
+            </select>
+            <select x-model="formPedido.status" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option>pendente</option><option>pago</option><option>enviado</option><option>cancelado</option>
+            </select>
+            <button @click="createPedido()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Criar pedido</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Pedidos</h2><button @click="loadPedidos()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Cliente</th><th class="px-4 py-2 text-left">Status</th><th class="px-4 py-2 text-right">Total</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="p in pedidos" :key="p.id">
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-2 text-slate-400" x-text="p.id"></td>
+                  <td class="px-4 py-2 font-semibold" x-text="nomeCliente(p.clienteId)"></td>
+                  <td class="px-4 py-2"><span class="text-xs px-2 py-1 rounded-full" :class="statusColor(p.status)" x-text="p.status"></span></td>
+                  <td class="px-4 py-2 text-right text-emerald-700 font-black" x-text="'R$ ' + p.valorTotal.toFixed(2)"></td>
+                  <td class="px-4 py-2 text-right"><button @click="deletePedido(p.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">apagar</button></td>
+                </tr>
+              </template>
+              <tr x-show="pedidos.length === 0"><td colspan="5" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum pedido</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ITENS PEDIDO -->
+    <section x-show="tab === 'itens'" x-transition>
+      <div class="grid lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h2 class="font-black text-lg mb-1">Novo item</h2>
+          <p class="text-xs text-slate-500 mb-4">Preco vem do produto; estoque eh descontado automatico.</p>
+          <div class="space-y-3">
+            <select x-model.number="formItem.pedidoId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Pedido --</option>
+              <template x-for="p in pedidos" :key="p.id"><option :value="p.id" x-text="'Pedido #' + p.id + ' - ' + nomeCliente(p.clienteId)"></option></template>
+            </select>
+            <select x-model.number="formItem.produtoId" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Produto --</option>
+              <template x-for="p in produtos" :key="p.id"><option :value="p.id" x-text="p.nome + ' (R$ ' + p.preco.toFixed(2) + ', estoque ' + p.estoque + ')'"></option></template>
+            </select>
+            <input x-model.number="formItem.quantidade" type="number" min="1" placeholder="Quantidade" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+            <button @click="createItem()" class="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-lg py-2.5 text-sm font-semibold">Adicionar</button>
+          </div>
+        </div>
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="p-5 border-b flex justify-between items-center"><h2 class="font-black text-lg">Itens de pedido</h2><button @click="loadItens()" class="text-xs text-slate-500 hover:text-slate-900">recarregar</button></div>
+          <table class="w-full text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500"><tr><th class="px-4 py-2 text-left">ID</th><th class="px-4 py-2 text-left">Pedido</th><th class="px-4 py-2 text-left">Produto</th><th class="px-4 py-2 text-right">Qtd</th><th class="px-4 py-2 text-right">Unit.</th><th></th></tr></thead>
+            <tbody>
+              <template x-for="i in itens" :key="i.id">
+                <tr class="border-t border-slate-100 hover:bg-slate-50">
+                  <td class="px-4 py-2 text-slate-400" x-text="i.id"></td>
+                  <td class="px-4 py-2" x-text="'#' + i.pedidoId"></td>
+                  <td class="px-4 py-2 font-semibold" x-text="nomeProduto(i.produtoId)"></td>
+                  <td class="px-4 py-2 text-right" x-text="i.quantidade"></td>
+                  <td class="px-4 py-2 text-right text-emerald-700" x-text="'R$ ' + i.precoUnitario.toFixed(2)"></td>
+                  <td class="px-4 py-2 text-right"><button @click="deleteItem(i.id)" class="text-rose-600 hover:text-rose-800 text-xs font-semibold">remover</button></td>
+                </tr>
+              </template>
+              <tr x-show="itens.length === 0"><td colspan="6" class="px-4 py-8 text-center text-slate-400 text-sm">Nenhum item</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIACEP -->
+    <section x-show="tab === 'viacep'" x-transition>
+      <div class="max-w-xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <h2 class="font-black text-xl mb-1">Consulta ViaCEP</h2>
+        <p class="text-sm text-slate-500 mb-5">Testa a integracao com a API externa viacep.com.br</p>
+        <div class="flex gap-2">
+          <input x-model="cepInput" placeholder="Digita o CEP (ex: 01001000)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2.5 text-sm" @keyup.enter="consultarCep()">
+          <button @click="consultarCep()" class="bg-slate-900 hover:bg-slate-800 text-white rounded-lg px-5 py-2.5 text-sm font-semibold">Consultar</button>
+        </div>
+        <div x-show="cepResult" class="mt-6 bg-slate-900 text-slate-100 rounded-lg p-4 text-xs font-mono overflow-x-auto">
+          <pre x-text="JSON.stringify(cepResult, null, 2)"></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- FILTROS -->
+    <section x-show="tab === 'filtros'" x-transition>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-black mb-3">Pedidos por cliente</h3>
+          <div class="flex gap-2 mb-3">
+            <select x-model.number="filtroClienteId" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Cliente --</option>
+              <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <button @click="filtrarPedidosCliente()" class="bg-slate-900 text-white rounded-lg px-4 text-sm font-semibold">OK</button>
+          </div>
+          <pre x-show="filtroPedidosCliente" class="bg-slate-900 text-slate-100 rounded p-3 text-xs overflow-x-auto" x-text="JSON.stringify(filtroPedidosCliente, null, 2)"></pre>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-black mb-3">Enderecos por cliente</h3>
+          <div class="flex gap-2 mb-3">
+            <select x-model.number="filtroClienteId2" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Cliente --</option>
+              <template x-for="c in clientes" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <button @click="filtrarEnderecosCliente()" class="bg-slate-900 text-white rounded-lg px-4 text-sm font-semibold">OK</button>
+          </div>
+          <pre x-show="filtroEnderecosCliente" class="bg-slate-900 text-slate-100 rounded p-3 text-xs overflow-x-auto" x-text="JSON.stringify(filtroEnderecosCliente, null, 2)"></pre>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-black mb-3">Produtos por categoria</h3>
+          <div class="flex gap-2 mb-3">
+            <select x-model.number="filtroCategoriaId" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Categoria --</option>
+              <template x-for="c in categorias" :key="c.id"><option :value="c.id" x-text="c.nome"></option></template>
+            </select>
+            <button @click="filtrarProdutosCategoria()" class="bg-slate-900 text-white rounded-lg px-4 text-sm font-semibold">OK</button>
+          </div>
+          <pre x-show="filtroProdutosCategoria" class="bg-slate-900 text-slate-100 rounded p-3 text-xs overflow-x-auto" x-text="JSON.stringify(filtroProdutosCategoria, null, 2)"></pre>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+          <h3 class="font-black mb-3">Itens por pedido</h3>
+          <div class="flex gap-2 mb-3">
+            <select x-model.number="filtroPedidoId" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">
+              <option value="">-- Pedido --</option>
+              <template x-for="p in pedidos" :key="p.id"><option :value="p.id" x-text="'#' + p.id"></option></template>
+            </select>
+            <button @click="filtrarItensPedido()" class="bg-slate-900 text-white rounded-lg px-4 text-sm font-semibold">OK</button>
+          </div>
+          <pre x-show="filtroItensPedido" class="bg-slate-900 text-slate-100 rounded p-3 text-xs overflow-x-auto" x-text="JSON.stringify(filtroItensPedido, null, 2)"></pre>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <footer class="max-w-7xl mx-auto px-4 py-6 text-center text-xs text-slate-400">
+    E-commerce API - Trabalho Haskell P2 - Yesod - Painel so pra testes
+  </footer>
+</div>
+
+<script>
+function app() {
+  return {
+    tab: 'clientes',
+    status: { online: false },
+    toast: { show: false, msg: '', err: false },
+    get tabs() {
+      return [
+        { id: 'clientes',     label: 'Clientes',     count: this.clientes.length },
+        { id: 'enderecos',    label: 'Enderecos',    count: this.enderecos.length },
+        { id: 'categorias',   label: 'Categorias',   count: this.categorias.length },
+        { id: 'fornecedores', label: 'Fornecedores', count: this.fornecedores.length },
+        { id: 'produtos',     label: 'Produtos',     count: this.produtos.length },
+        { id: 'pedidos',      label: 'Pedidos',      count: this.pedidos.length },
+        { id: 'itens',        label: 'Itens Pedido', count: this.itens.length },
+        { id: 'viacep',       label: 'ViaCEP' },
+        { id: 'filtros',      label: 'Filtros' },
+      ];
+    },
+
+    clientes: [],     formCliente: { nome: '', email: '', telefone: '', cpf: '' },
+    categorias: [],   formCategoria: { nome: '', descricao: '' },
+    fornecedores: [], formFornecedor: { nome: '', cnpj: '', email: '', telefone: '' },
+    produtos: [],     formProduto: { nome: '', descricao: '', preco: 0, estoque: 0, categoriaId: '', fornecedorId: '' },
+    enderecos: [],    formEndereco: { clienteId: '', cep: '', numero: '', complemento: '' },
+    pedidos: [],      formPedido: { clienteId: '', enderecoId: '', status: 'pendente' },
+    itens: [],        formItem: { pedidoId: '', produtoId: '', quantidade: 1 },
+
+    cepInput: '', cepResult: null,
+
+    filtroClienteId: '',   filtroPedidosCliente: null,
+    filtroClienteId2: '',  filtroEnderecosCliente: null,
+    filtroCategoriaId: '', filtroProdutosCategoria: null,
+    filtroPedidoId: '',    filtroItensPedido: null,
+
+    async init() {
+      await this.checkStatus();
+      await this.loadAll();
+    },
+
+    async checkStatus() {
+      try { const r = await fetch('/status'); this.status.online = r.ok; }
+      catch { this.status.online = false; }
+    },
+
+    async loadAll() {
+      await Promise.allSettled([
+        this.loadClientes(), this.loadEnderecos(), this.loadCategorias(),
+        this.loadFornecedores(), this.loadProdutos(), this.loadPedidos(), this.loadItens(),
+      ]);
+    },
+
+    showToast(msg, err = false) {
+      this.toast = { show: true, msg, err };
+      clearTimeout(this._t);
+      this._t = setTimeout(() => this.toast.show = false, 3500);
+    },
+
+    async api(method, path, body) {
+      const opts = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) opts.body = JSON.stringify(body);
+      const r = await fetch(path, opts);
+      const txt = await r.text();
+      let data = null;
+      try { data = txt ? JSON.parse(txt) : null; } catch {}
+      if (!r.ok) throw new Error(data?.erro || ('HTTP ' + r.status));
+      return data;
+    },
+
+    normalize(arr) {
+      return (arr || []).map(x => {
+        if (x && typeof x === 'object' && 'id' in x && !('nome' in x || 'cep' in x || 'status' in x)) {
+          return { id: x.id, ...x.value };
+        }
+        return x;
+      });
+    },
+
+    async loadClientes()     { try { this.clientes     = this.normalize(await this.api('GET', '/clientes')); }     catch(e) { this.showToast('Clientes: ' + e.message, true); } },
+    async loadCategorias()   { try { this.categorias   = this.normalize(await this.api('GET', '/categorias')); }   catch(e) { this.showToast('Categorias: ' + e.message, true); } },
+    async loadFornecedores() { try { this.fornecedores = this.normalize(await this.api('GET', '/fornecedores')); } catch(e) { this.showToast('Fornecedores: ' + e.message, true); } },
+    async loadProdutos()     { try { this.produtos     = this.normalize(await this.api('GET', '/produtos')); }     catch(e) { this.showToast('Produtos: ' + e.message, true); } },
+    async loadEnderecos()    { try { this.enderecos    = this.normalize(await this.api('GET', '/enderecos')); }    catch(e) { this.showToast('Enderecos: ' + e.message, true); } },
+    async loadPedidos()      { try { this.pedidos      = this.normalize(await this.api('GET', '/pedidos')); }      catch(e) { this.showToast('Pedidos: ' + e.message, true); } },
+    async loadItens()        { try { this.itens        = this.normalize(await this.api('GET', '/itens-pedido')); } catch(e) { this.showToast('Itens: ' + e.message, true); } },
+
+    async createCliente() {
+      try { await this.api('POST', '/clientes', this.formCliente);
+        this.formCliente = { nome: '', email: '', telefone: '', cpf: '' };
+        await this.loadClientes(); this.showToast('Cliente cadastrado'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deleteCliente(id) { if (!confirm('Apagar cliente #' + id + '?')) return;
+      try { await this.api('DELETE', '/clientes/' + id); await this.loadClientes(); this.showToast('Cliente removido'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async createCategoria() {
+      try { await this.api('POST', '/categorias', { nome: this.formCategoria.nome, descricao: this.formCategoria.descricao || null });
+        this.formCategoria = { nome: '', descricao: '' };
+        await this.loadCategorias(); this.showToast('Categoria cadastrada'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deleteCategoria(id) { if (!confirm('Apagar categoria #' + id + '?')) return;
+      try { await this.api('DELETE', '/categorias/' + id); await this.loadCategorias(); this.showToast('Removida'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async createFornecedor() {
+      try { await this.api('POST', '/fornecedores', this.formFornecedor);
+        this.formFornecedor = { nome: '', cnpj: '', email: '', telefone: '' };
+        await this.loadFornecedores(); this.showToast('Fornecedor cadastrado'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deleteFornecedor(id) { if (!confirm('Apagar fornecedor #' + id + '?')) return;
+      try { await this.api('DELETE', '/fornecedores/' + id); await this.loadFornecedores(); this.showToast('Removido'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async createProduto() {
+      try { await this.api('POST', '/produtos', this.formProduto);
+        this.formProduto = { nome: '', descricao: '', preco: 0, estoque: 0, categoriaId: '', fornecedorId: '' };
+        await this.loadProdutos(); this.showToast('Produto cadastrado'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deleteProduto(id) { if (!confirm('Apagar produto #' + id + '?')) return;
+      try { await this.api('DELETE', '/produtos/' + id); await this.loadProdutos(); this.showToast('Removido'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async createEndereco() {
+      try { await this.api('POST', '/enderecos', this.formEndereco);
+        this.formEndereco = { clienteId: '', cep: '', numero: '', complemento: '' };
+        await this.loadEnderecos(); this.showToast('Endereco cadastrado via ViaCEP'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deleteEndereco(id) { if (!confirm('Apagar endereco #' + id + '?')) return;
+      try { await this.api('DELETE', '/enderecos/' + id); await this.loadEnderecos(); this.showToast('Removido'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async createPedido() {
+      try {
+        const body = { ...this.formPedido, valorTotal: 0, criadoEm: new Date().toISOString() };
+        await this.api('POST', '/pedidos', body);
+        this.formPedido = { clienteId: '', enderecoId: '', status: 'pendente' };
+        await this.loadPedidos(); this.showToast('Pedido criado'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deletePedido(id) { if (!confirm('Apagar pedido #' + id + '?')) return;
+      try { await this.api('DELETE', '/pedidos/' + id); await this.loadPedidos(); this.showToast('Removido'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async createItem() {
+      try { await this.api('POST', '/itens-pedido', this.formItem);
+        this.formItem = { pedidoId: '', produtoId: '', quantidade: 1 };
+        await Promise.all([this.loadItens(), this.loadPedidos(), this.loadProdutos()]);
+        this.showToast('Item adicionado'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+    async deleteItem(id) { if (!confirm('Remover item #' + id + '?')) return;
+      try { await this.api('DELETE', '/itens-pedido/' + id);
+        await Promise.all([this.loadItens(), this.loadPedidos(), this.loadProdutos()]);
+        this.showToast('Removido'); }
+      catch(e) { this.showToast(e.message, true); }
+    },
+
+    async consultarCep() {
+      if (!this.cepInput) return;
+      try { this.cepResult = await this.api('GET', '/viacep/' + encodeURIComponent(this.cepInput)); this.showToast('CEP encontrado'); }
+      catch(e) { this.cepResult = { erro: e.message }; this.showToast(e.message, true); }
+    },
+
+    async filtrarPedidosCliente()    { if (!this.filtroClienteId)    return; try { this.filtroPedidosCliente    = await this.api('GET', '/clientes/' + this.filtroClienteId + '/pedidos'); } catch(e) { this.showToast(e.message, true); } },
+    async filtrarEnderecosCliente()  { if (!this.filtroClienteId2)   return; try { this.filtroEnderecosCliente  = await this.api('GET', '/clientes/' + this.filtroClienteId2 + '/enderecos'); } catch(e) { this.showToast(e.message, true); } },
+    async filtrarProdutosCategoria() { if (!this.filtroCategoriaId)  return; try { this.filtroProdutosCategoria = await this.api('GET', '/categorias/' + this.filtroCategoriaId + '/produtos'); } catch(e) { this.showToast(e.message, true); } },
+    async filtrarItensPedido()       { if (!this.filtroPedidoId)     return; try { this.filtroItensPedido       = await this.api('GET', '/pedidos/' + this.filtroPedidoId + '/itens'); } catch(e) { this.showToast(e.message, true); } },
+
+    nomeCliente(id)   { const c = this.clientes.find(x => x.id === id); return c ? c.nome : '#' + id; },
+    nomeCategoria(id) { const c = this.categorias.find(x => x.id === id); return c ? c.nome : '#' + id; },
+    nomeProduto(id)   { const p = this.produtos.find(x => x.id === id); return p ? p.nome : '#' + id; },
+    statusColor(s) {
+      return { 'pendente': 'bg-amber-100 text-amber-800',
+               'pago': 'bg-blue-100 text-blue-800',
+               'enviado': 'bg-emerald-100 text-emerald-800',
+               'cancelado': 'bg-rose-100 text-rose-800' }[s] || 'bg-slate-100 text-slate-700';
+    },
+  };
+}
+</script>
+</body>
+</html>
