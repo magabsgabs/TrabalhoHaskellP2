@@ -25,3 +25,13 @@
 /viacep/#Text             ViaCepR       GET
 /enderecos                EnderecosR    GET POST
 /enderecos/#EnderecoId    EnderecoR     GET PUT DELETE
+
+
+/fornecedores                   FornecedoresR   GET POST
+/fornecedores/#FornecedorId     FornecedorR     GET PUT DELETE
+
+/pedidos                        PedidosR        GET POST
+/pedidos/#PedidoId              PedidoR         GET PUT DELETE
+
+/itens-pedido                   ItensPedidoR    GET POST
+/itens-pedido/#ItemPedidoId     ItemPedidoR     GET PUT DELETE
