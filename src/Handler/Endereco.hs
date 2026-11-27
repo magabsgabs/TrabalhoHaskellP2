@@ -3,6 +3,7 @@ module Handler.Endereco where
 
 import Import
 import qualified Data.Text as T
+import Data.Aeson (withObject, (.:?))
 import Handler.ViaCEP (ViaCepResp (..), consultaCep)
 
 -- payload que o cliente manda, viacep preenche o resto
