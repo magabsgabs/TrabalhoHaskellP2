@@ -1,0 +1,45 @@
+# ------------------------------------------------------------
+# Config do Fly.io pro ecommerce-yesod
+# Docs: https://fly.io/docs/reference/configuration/
+# ------------------------------------------------------------
+
+# "app" tem que ser UNICO em TODO o fly.io.
+# Se "ecommerce-yesod" ja estiver pego, o `fly launch` vai pedir pra trocar.
+app = "ecommerce-yesod"
+primary_region = "gru"   # Sao Paulo (latencia baixa pro Brasil)
+
+[build]
+  # usa o Dockerfile na raiz
+
+[env]
+  YESOD_HOST = "*4"
+  YESOD_PORT = "8080"
+  # aponta o SQLite pro volume persistente (nao perde dados em redeploy)
+  YESOD_SQLITE_DATABASE = "/data/ecommerce-yesod.sqlite3"
+
+# ------------------------------------------------------------
+# Volume persistente: aqui mora o arquivo SQLite
+# ------------------------------------------------------------
+[[mounts]]
+  source      = "data"       # nome do volume (criamos com `fly volumes create`)
+  destination = "/data"      # onde monta dentro do container
+
+# ------------------------------------------------------------
+# HTTP + HTTPS automatico
+# ------------------------------------------------------------
+[http_service]
+  internal_port       = 8080
+  force_https         = true
+  # modo economico do free tier: desliga a maquina quando ninguem acessa,
+  # liga de novo ao primeiro request. Cold start de ~1-2s.
+  auto_stop_machines  = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+# ------------------------------------------------------------
+# VM: 1 CPU shared, 256MB RAM (dentro do free tier)
+# ------------------------------------------------------------
+[[vm]]
+  cpu_kind = "shared"
+  cpus     = 1
+  memory_mb = 256
