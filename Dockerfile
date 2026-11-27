@@ -1,16 +1,12 @@
 # ============================================================
 # STAGE 1 — builder (tem GHC + Stack, cerca de 3GB)
 # ============================================================
-# Imagem base bookworm; Stack baixa GHC 9.2.8 via `stack setup` (LTS 20.26)
+# A imagem oficial haskell:*-slim ainda roda em Debian buster (EOL),
+# cujos repos estao 404. Nao rodamos apt no builder — ela ja vem com GHC,
+# libgmp e zlib necessarios pra buildar o projeto (SQLite, nao PostgreSQL).
 FROM haskell:9.4.8-slim AS builder
 
 WORKDIR /app
-
-# bibliotecas de sistema que o Yesod/Persistent precisa pra linkar
-# (projeto usa SQLite, nao PostgreSQL — nao precisa libpq-dev)
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    zlib1g-dev libgmp-dev \
-    && rm -rf /var/lib/apt/lists/*
 
 # 1) copia so as declaracoes de deps pra aproveitar cache
 COPY stack.yaml stack.yaml.lock package.yaml ./
