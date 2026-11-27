@@ -1,7 +1,8 @@
 # ============================================================
 # STAGE 1 — builder (tem GHC + Stack, cerca de 3GB)
 # ============================================================
-FROM haskell:9.2.8-slim AS builder
+# Imagem base bookworm; Stack baixa GHC 9.2.8 via `stack setup` (LTS 20.26)
+FROM haskell:9.4.8-slim AS builder
 
 WORKDIR /app
 
